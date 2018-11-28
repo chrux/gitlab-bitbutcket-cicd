@@ -15,6 +15,9 @@ def main(source, destination):
   if os.path.isdir(gitlab_ci_file):
     gitlab_ci_file = os.path.join(source, '.gitlab-ci.yml')
 
+  bitbucket_pipeline_data = {}
+  bitbucket_pipeline_data['pipelines'] = {}
+  bitbucket_pipeline_data['pipelines']['branches'] = {}
   with open(gitlab_ci_file, 'r') as stream:
     gitlab_ci_data = yaml.load(stream)
     # Remove everything but jobs, more info https://docs.gitlab.com/ee/ci/yaml/README.html#jobs
@@ -29,7 +32,18 @@ def main(source, destination):
       'cache',
     ]
     jobs_data = { key:gitlab_ci_data[key] for key in gitlab_ci_data if key not in reserved_keywords }
-    print(jobs_data)
+    for job_key in jobs_data:
+      job = jobs_data[job_key]
+      step = { key:job[key] for key in job if key in ['image', 'script'] }
+      step['name'] = f'{job_key}'
+      if 'before_script' in job and job['before_script']:
+        step['script'] = job['before_script'] + (step['script'] if 'script' in step else [])
+      if 'after_script' in job and job['after_script']:
+        step['script'] = (step['script'] if 'script' in step else []) + job['after_script']
+      for branch in job['only']:
+        bitbucket_pipeline_data['pipelines']['branches'][branch] = step
+  
+  print(bitbucket_pipeline_data)
 
 if __name__ == '__main__':
   main()
