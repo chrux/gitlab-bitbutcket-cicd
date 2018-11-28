@@ -3,6 +3,8 @@ import yaml
 import io
 import os
 
+from PyInquirer import prompt
+
 @click.command()
 @click.option('--source', '-s', help='Provide the path to the folder where the gitlab CI, .gitlab-ci.yml, file resides.')
 @click.option('--destination', '-d', help='Optionally: Provide the path where you want to save the Bitbucket Pipeline, bitbucket-pipelines.yml, file. By default it will use the same source path.')
@@ -55,6 +57,21 @@ def main(source, destination):
           bitbucket_pipeline_data['pipelines']['branches'] = {}
         for branch in job['only']:
           bitbucket_pipeline_data['pipelines']['branches'][branch] = []
+          questions = [{
+            'type': 'list',
+            'name': 'deployment',
+            'message': f'Select the type of environment for your deployment step {job_key} in branch {branch}',
+            'choices': [
+              'None',
+              'Test',
+              'Staging',
+              'Production'
+            ]
+          }]
+          answers = prompt(questions)
+          deployment = answers['deployment'].lower()
+          if deployment != 'none':
+            step['deployment'] = deployment
           bitbucket_pipeline_data['pipelines']['branches'][branch].append({ 'step': step })
       else:
         bitbucket_pipeline_data['pipelines']['default'] = []
