@@ -16,12 +16,17 @@ def main(source, destination):
         return
 
     gitlab_ci_file = source
-    bitbucket_pipeline_file = None
+    bitbucket_pipeline_file = destination
     if os.path.isdir(gitlab_ci_file):
         gitlab_ci_file = os.path.join(source, '.gitlab-ci.yml')
-        bitbucket_pipeline_file = os.path.join(source, 'bitbucket-pipelines.yml')
+        if bitbucket_pipeline_file is None:
+          bitbucket_pipeline_file = os.path.join(source, 'bitbucket-pipelines.yml')
     else:
-        bitbucket_pipeline_file = os.path.join(os.path.dirname(source), 'bitbucket-pipelines.yml')
+        if bitbucket_pipeline_file is None:
+          bitbucket_pipeline_file = os.path.join(os.path.dirname(source), 'bitbucket-pipelines.yml')
+    
+    if os.path.isdir(bitbucket_pipeline_file):
+        gitlab_ci_file = os.path.join(destination, 'bitbucket-pipelines.yml')
 
 
     bitbucket_pipeline_data = {}
