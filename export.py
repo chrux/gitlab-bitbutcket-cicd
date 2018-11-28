@@ -16,8 +16,13 @@ def main(source, destination):
         return
 
     gitlab_ci_file = source
+    bitbucket_pipeline_file = None
     if os.path.isdir(gitlab_ci_file):
         gitlab_ci_file = os.path.join(source, '.gitlab-ci.yml')
+        bitbucket_pipeline_file = os.path.join(source, 'bitbucket-pipelines.yml')
+    else:
+        bitbucket_pipeline_file = os.path.join(os.path.dirname(source), 'bitbucket-pipelines.yml')
+
 
     bitbucket_pipeline_data = {}
     bitbucket_pipeline_data['pipelines'] = {}
@@ -79,7 +84,7 @@ def main(source, destination):
                 step['script'] = (
                     step['script'] if 'script' in step else []) + job['after_script']
             if caches:
-                step['caches'] = caches
+                step['caches'] = caches.copy()
             if 'only' in job:
                 if 'branches' not in bitbucket_pipeline_data['pipelines']:
                     bitbucket_pipeline_data['pipelines']['branches'] = {}
@@ -96,6 +101,11 @@ def main(source, destination):
                     step['deployment'] = deployment
                 bitbucket_pipeline_data['pipelines']['default'].append({ step: step })
 
+    # Let's write the file
+    with io.open(bitbucket_pipeline_file, 'w', encoding='utf8') as out:
+        yaml.dump(bitbucket_pipeline_data, out, default_flow_style=False, allow_unicode=True)
+
+    print(f'The bitbucket pipeline file has been created {bitbucket_pipeline_file}')
     print(bitbucket_pipeline_data)
 
 
@@ -113,11 +123,6 @@ def get_deployment_env(target):
     }]
     answers = prompt(questions)
     return answers['deployment'].lower()
-    
-    if deployment != 'none':
-        step['deployment'] = deployment
-        bitbucket_pipeline_data['pipelines']['branches'][branch].append({ 'step': step})
-
 
 if __name__ == '__main__':
     main()
