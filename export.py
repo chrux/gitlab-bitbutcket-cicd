@@ -2,6 +2,7 @@ import click
 import yaml
 import io
 import os
+import sys
 
 from PyInquirer import prompt
 
@@ -13,7 +14,7 @@ def main(source, destination):
     if source is None:
         click.echo(
             '--source or -s is required, you need to specify a file to export.')
-        return
+        sys.exit(os.EX_CONFIG)
 
     gitlab_ci_file = source
     bitbucket_pipeline_file = destination
@@ -33,6 +34,12 @@ def main(source, destination):
     bitbucket_pipeline_data['pipelines'] = {}
     with open(gitlab_ci_file, 'r') as stream:
         gitlab_ci_data = yaml.load(stream)
+
+        # In case there is no content
+        if gitlab_ci_data is None:
+            click.echo('.gitlab-ci.yml is empty')
+            sys.exit(os.EX_DATAERR)
+        
         # Remove everything but jobs, more info https://docs.gitlab.com/ee/ci/yaml/README.html#jobs
         reserved_keywords = [
             'image',
@@ -110,8 +117,8 @@ def main(source, destination):
     with io.open(bitbucket_pipeline_file, 'w', encoding='utf8') as out:
         yaml.dump(bitbucket_pipeline_data, out, default_flow_style=False, allow_unicode=True)
 
-    print(f'The bitbucket pipeline file has been created {bitbucket_pipeline_file}')
-    print(bitbucket_pipeline_data)
+    click.echo(f'The bitbucket pipeline file has been created {bitbucket_pipeline_file}. The represented object is the following:')
+    click.echo(bitbucket_pipeline_data)
 
 
 def get_deployment_env(target):
