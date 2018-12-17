@@ -101,13 +101,15 @@ def main(source, destination):
                 if 'branches' not in bitbucket_pipeline_data['pipelines']:
                     bitbucket_pipeline_data['pipelines']['branches'] = {}
                 for branch in job['only']:
-                    bitbucket_pipeline_data['pipelines']['branches'][branch] = []
+                    if branch not in bitbucket_pipeline_data['pipelines']['branches']:
+                        bitbucket_pipeline_data['pipelines']['branches'][branch] = []
                     deployment = get_deployment_env(f'your deployment step {job_key} in branch {branch}')
                     if deployment != 'none':
                         step['deployment'] = deployment
                     bitbucket_pipeline_data['pipelines']['branches'][branch].append({ 'step': step })
             else:
-                bitbucket_pipeline_data['pipelines']['default'] = []
+                if 'default' not in bitbucket_pipeline_data['pipelines']:
+                    bitbucket_pipeline_data['pipelines']['default'] = []
                 deployment = get_deployment_env('default')
                 if deployment != 'none':
                     step['deployment'] = deployment
