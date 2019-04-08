@@ -4,6 +4,7 @@ The purpose of this utility is to be able to migrate the .gitlab-ci.yml file to 
 
 ## Dependencies
 
+- Python 2.7.16, 3.5.2 and 3.6.8 (writter for this originally)
 - PyYAML
 - click
 - PyInquirer

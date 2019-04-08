@@ -88,7 +88,7 @@ def main(source, destination):
         for job_key in jobs_data:
             job = jobs_data[job_key]
             step = {key: job[key] for key in job if key in ['image', 'script']}
-            step['name'] = f'{job_key}'
+            step['name'] = job_key
             if 'before_script' in job and job['before_script']:
                 step['script'] = job['before_script'] + \
                     (step['script'] if 'script' in step else [])
@@ -96,14 +96,14 @@ def main(source, destination):
                 step['script'] = (
                     step['script'] if 'script' in step else []) + job['after_script']
             if caches:
-                step['caches'] = caches.copy()
+                step['caches'] = list(caches)
             if 'only' in job:
                 if 'branches' not in bitbucket_pipeline_data['pipelines']:
                     bitbucket_pipeline_data['pipelines']['branches'] = {}
                 for branch in job['only']:
                     if branch not in bitbucket_pipeline_data['pipelines']['branches']:
                         bitbucket_pipeline_data['pipelines']['branches'][branch] = []
-                    deployment = get_deployment_env(f'your deployment step {job_key} in branch {branch}')
+                    deployment = get_deployment_env('your deployment step %s in branch %s' % (job_key, branch))
                     if deployment != 'none':
                         step['deployment'] = deployment
                     bitbucket_pipeline_data['pipelines']['branches'][branch].append({ 'step': step })
@@ -119,7 +119,7 @@ def main(source, destination):
     with io.open(bitbucket_pipeline_file, 'w', encoding='utf8') as out:
         yaml.dump(bitbucket_pipeline_data, out, default_flow_style=False, allow_unicode=True)
 
-    click.echo(f'The bitbucket pipeline file has been created {bitbucket_pipeline_file}. The represented object is the following:')
+    click.echo('The bitbucket pipeline file has been created %s. The represented object is the following:' % bitbucket_pipeline_file)
     click.echo(bitbucket_pipeline_data)
 
 
@@ -127,7 +127,7 @@ def get_deployment_env(target):
     questions = [{
         'type': 'list',
         'name': 'deployment',
-        'message': f'Select the type of environment for {target}',
+        'message': 'Select the type of environment for %s' % target,
               'choices': [
                   'None',
                 'Test',
